@@ -1,0 +1,96 @@
+.holy-grail {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    min-height: 100vh;
+}
+
+.holy-grail__header,
+.holy-grail__footer {
+    background: #fff;
+    border-color: #e5e7eb;
+    border-style: solid;
+}
+
+.holy-grail__header {
+    border-width: 0 0 1px;
+}
+
+.holy-grail__footer {
+    border-width: 1px 0 0;
+    padding: 1rem 1.5rem;
+    text-align: center;
+}
+
+.holy-grail__nav,
+.holy-grail__body {
+    margin-inline: auto;
+    max-width: 80rem;
+    width: 100%;
+}
+
+.holy-grail__nav {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+}
+
+.holy-grail__body {
+    align-items: start;
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: minmax(12rem, 16rem) minmax(0, 1fr) minmax(
+            12rem,
+            16rem
+        );
+    padding: 2rem 1.5rem;
+}
+
+.holy-grail__sidebar,
+.holy-grail__main {
+    min-width: 0;
+}
+
+.holy-grail__sidebar {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+.holy-grail__sidebar nav {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.holy-grail__sidebar a {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+}
+
+.css-load-test {
+    color: #dc2626;
+}
+
+@media (max-width: 900px) {
+    .holy-grail__body {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .holy-grail__main {
+        grid-column: 1 / -1;
+        grid-row: 1;
+    }
+}
+
+@media (max-width: 600px) {
+    .holy-grail__body {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 1.5rem 1rem;
+    }
+
+    .holy-grail__main {
+        grid-column: auto;
+        grid-row: auto;
+    }
+}

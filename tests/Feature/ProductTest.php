@@ -21,7 +21,11 @@ class ProductTest extends TestCase
         $this->get(route('products.index'))
             ->assertOk()
             ->assertSee('Kafija')
-            ->assertSee('8,50 €');
+            ->assertSee('8,50 €')
+            ->assertSee('class="holy-grail"', false)
+            ->assertSee('class="holy-grail__main"', false)
+            ->assertSee('class="css-load-test"', false)
+            ->assertSee('CSS ielāde darbojas');
 
         $this->get(route('products.show', $product))
             ->assertOk()
