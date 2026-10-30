@@ -61,7 +61,12 @@ class ProductController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'quantity' => ['required', 'integer', 'min:0', 'max:4294967295'],
             'description' => ['nullable', 'string', 'max:1000'],
-            'expiration_date' => ['nullable', 'date'],
+            'expiration_date' => [
+                'nullable',
+                'date',
+                'after_or_equal:'.today()->subYear()->toDateString(),
+                'before_or_equal:'.today()->addYears(2)->toDateString(),
+            ],
             'status' => ['required', 'string', 'max:255'],
         ]);
     }

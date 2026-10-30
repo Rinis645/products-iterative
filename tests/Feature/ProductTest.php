@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Product;
 use Database\Seeders\ProductSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class ProductTest extends TestCase
@@ -57,6 +58,15 @@ class ProductTest extends TestCase
         $this->get(route('products.edit', $product))
             ->assertOk()
             ->assertSee('value="2027-01-15"', false);
+    }
+
+    public function test_successful_action_flash_is_displayed_by_layout_component(): void
+    {
+        $this->withSession(['success' => 'Produkts veiksmīgi izveidots.'])
+            ->get(route('products.index'))
+            ->assertOk()
+            ->assertSee('role="status"', false)
+            ->assertSee('Produkts veiksmīgi izveidots.');
     }
 
     public function test_products_index_displays_products(): void
@@ -148,6 +158,17 @@ class ProductTest extends TestCase
             ->assertRedirect(route('products.create'))
             ->assertSessionHasErrors(['name', 'quantity', 'status']);
 
+        $this->from(route('products.create'))
+            ->followingRedirects()
+            ->post(route('products.store'), [
+                'name' => '',
+                'quantity' => '-1',
+                'status' => '',
+            ])
+            ->assertOk()
+            ->assertSee('role="alert"', false)
+            ->assertSee('Lūdzu, pārbaudiet ievadītos datus.');
+
         $this->post(route('products.store'), [
             'name' => 'Nepareizs produkts',
             'quantity' => '1.5',
@@ -156,6 +177,61 @@ class ProductTest extends TestCase
         ])->assertSessionHasErrors(['quantity', 'expiration_date']);
 
         $this->assertDatabaseCount('products', 0);
+    }
+
+    public function test_expiration_date_must_be_within_two_years_when_creating_or_editing(): void
+    {
+        $this->travelTo(Carbon::parse('2026-10-30'));
+
+        $this->get(route('products.create'))
+            ->assertOk()
+            ->assertSee('min="2025-10-30"', false)
+            ->assertSee('max="2028-10-30"', false);
+
+        $this->post(route('products.store'), [
+            'name' => 'Derīgs produkts',
+            'quantity' => '1',
+            'description' => 'Pārbaudes apraksts',
+            'expiration_date' => '2028-10-30',
+            'status' => 'available',
+        ])->assertRedirect();
+
+        $product = Product::firstOrFail();
+
+        $this->assertDatabaseHas('products', [
+            'id' => $product->id,
+            'expiration_date' => '2028-10-30',
+        ]);
+
+        foreach (['2025-10-29', '2028-10-31'] as $expirationDate) {
+            $this->from(route('products.create'))
+                ->post(route('products.store'), [
+                    'name' => 'Nederīgs produkts',
+                    'quantity' => '1',
+                    'description' => 'Pārbaudes apraksts',
+                    'expiration_date' => $expirationDate,
+                    'status' => 'available',
+                ])
+                ->assertSessionHasErrors('expiration_date');
+
+            $this->from(route('products.edit', $product))
+                ->put(route('products.update', $product), [
+                    'name' => 'Derīgs produkts',
+                    'quantity' => '1',
+                    'description' => 'Pārbaudes apraksts',
+                    'expiration_date' => $expirationDate,
+                    'status' => 'available',
+                ])
+                ->assertSessionHasErrors('expiration_date');
+        }
+
+        $this->put(route('products.update', $product), [
+            'name' => 'Derīgs produkts',
+            'quantity' => '1',
+            'description' => 'Pārbaudes apraksts',
+            'expiration_date' => '2028-10-30',
+            'status' => 'available',
+        ])->assertRedirect(route('products.show', $product));
     }
 
     public function test_product_routes_use_model_binding(): void

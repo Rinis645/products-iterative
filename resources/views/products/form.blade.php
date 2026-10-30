@@ -1,14 +1,3 @@
-@if ($errors->any())
-    <div class="mb-6 rounded-md border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive" role="alert">
-        <p class="font-medium">Lūdzu, pārbaudiet ievadītos datus.</p>
-        <ul class="mt-2 list-inside list-disc">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
-
 <div class="space-y-5">
     <div>
         <label class="mb-2 block text-sm font-medium" for="name">Nosaukums</label>
@@ -30,7 +19,7 @@
 
     <div>
         <label class="mb-2 block text-sm font-medium" for="expiration_date">Derīguma termiņš</label>
-        <input class="w-full rounded-md border bg-background px-3 py-2" id="expiration_date" name="expiration_date" type="date" value="{{ old('expiration_date', isset($product) ? $product->expiration_date?->format('Y-m-d') : '') }}">
+        <input class="w-full rounded-md border bg-background px-3 py-2" id="expiration_date" name="expiration_date" type="date" value="{{ old('expiration_date', isset($product) ? $product->expiration_date?->format('Y-m-d') : '') }}" min="{{ today()->subYear()->toDateString() }}" max="{{ today()->addYears(2)->toDateString() }}">
         @error('expiration_date') <p class="mt-1 text-sm text-destructive">{{ $message }}</p> @enderror
     </div>
 
