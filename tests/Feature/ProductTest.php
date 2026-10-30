@@ -3,12 +3,37 @@
 namespace Tests\Feature;
 
 use App\Models\Product;
+use Database\Seeders\ProductSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ProductTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_product_seeder_creates_at_least_twenty_realistic_products(): void
+    {
+        $this->seed(ProductSeeder::class);
+
+        $this->assertDatabaseCount('products', 20);
+
+        $this->assertSame(
+            20,
+            Product::query()
+                ->whereNotNull('name')
+                ->whereNotNull('quantity')
+                ->whereNotNull('description')
+                ->whereNotNull('status')
+                ->count(),
+        );
+
+        $this->assertSame(
+            0,
+            Product::query()
+                ->whereNotIn('status', ['available', 'low_stock', 'out_of_stock', 'expired'])
+                ->count(),
+        );
+    }
 
     public function test_create_and_edit_forms_include_product_attributes(): void
     {
