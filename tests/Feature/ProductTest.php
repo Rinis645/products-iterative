@@ -24,6 +24,12 @@ class ProductTest extends TestCase
             ->assertSee('8,50 €')
             ->assertSee('class="holy-grail"', false)
             ->assertSee('class="holy-grail__main"', false)
+            ->assertSee('class="holy-grail__sidebar-nav"', false)
+            ->assertSee('aria-label="Kataloga saites"', false)
+            ->assertSee('Testa logo — Produkti')
+            ->assertSee('Testa reklāma')
+            ->assertSee('īpašos produktu piedāvājumus')
+            ->assertSee('Testa copyright')
             ->assertSee('class="css-load-test"', false)
             ->assertSee('CSS ielāde darbojas');
 

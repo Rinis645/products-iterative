@@ -11,16 +11,15 @@
     <body class="bg-background text-foreground antialiased">
         <div class="holy-grail">
             <header class="holy-grail__header">
-                <nav class="holy-grail__nav" aria-label="Galvenā navigācija">
-                <a class="text-lg font-semibold" href="{{ route('products.index') }}">Produkti</a>
-                <a class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground" href="{{ route('products.create') }}">Pievienot produktu</a>
-                </nav>
+                <div class="holy-grail__header-inner">
+                    <a class="text-lg font-semibold" href="{{ route('products.index') }}">Testa logo — Produkti</a>
+                </div>
             </header>
 
             <div class="holy-grail__body">
                 <aside class="holy-grail__sidebar" aria-label="Produktu navigācija">
                     <h2 class="mb-4 font-semibold">Katalogs</h2>
-                    <nav aria-label="Kataloga saites">
+                    <nav class="holy-grail__sidebar-nav" aria-label="Kataloga saites">
                         <a href="{{ route('products.index') }}">Visi produkti</a>
                         <a href="{{ route('products.create') }}">Pievienot produktu</a>
                     </nav>
@@ -37,13 +36,13 @@
                 </main>
 
                 <aside class="holy-grail__sidebar" aria-label="Papildinformācija">
-                    <h2 class="mb-2 font-semibold">Produktu katalogs</h2>
-                    <p class="text-sm text-muted-foreground">Pārvaldiet un apskatiet produktu informāciju.</p>
+                    <h2 class="mb-2 font-semibold">Testa reklāma</h2>
+                    <p class="text-sm text-muted-foreground">Atklājiet mūsu īpašos produktu piedāvājumus!</p>
                 </aside>
             </div>
 
             <footer class="holy-grail__footer">
-                <p>&copy; {{ date('Y') }} {{ config('app.name') }}</p>
+                <p>Testa copyright &copy; {{ date('Y') }} {{ config('app.name') }}</p>
                 <p class="css-load-test">CSS ielāde darbojas</p>
             </footer>
         </div>
