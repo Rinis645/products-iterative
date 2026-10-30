@@ -15,7 +15,9 @@
                 <thead class="border-b bg-muted/50">
                     <tr>
                         <th class="px-6 py-3 font-medium">Nosaukums</th>
-                        <th class="px-6 py-3 font-medium">Cena</th>
+                        <th class="px-6 py-3 font-medium">Daudzums</th>
+                        <th class="px-6 py-3 font-medium">Derīguma termiņš</th>
+                        <th class="px-6 py-3 font-medium">Statuss</th>
                         <th class="px-6 py-3 text-right font-medium">Darbības</th>
                     </tr>
                 </thead>
@@ -25,7 +27,9 @@
                             <td class="px-6 py-4 font-medium">
                                 <a class="hover:underline" href="{{ route('products.show', $product) }}">{{ $product->name }}</a>
                             </td>
-                            <td class="px-6 py-4">{{ number_format((float) $product->price, 2, ',', ' ') }} €</td>
+                            <td class="px-6 py-4">{{ $product->quantity }}</td>
+                            <td class="px-6 py-4">{{ $product->expiration_date?->format('d.m.Y') ?? '—' }}</td>
+                            <td class="px-6 py-4">{{ $product->status }}</td>
                             <td class="px-6 py-4">
                                 <div class="flex justify-end gap-4">
                                     <a class="underline underline-offset-4" href="{{ route('products.edit', $product) }}">Rediģēt</a>

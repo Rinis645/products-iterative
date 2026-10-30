@@ -8,8 +8,16 @@
     </div>
     <div class="max-w-2xl space-y-5 rounded-lg border bg-card p-6">
         <div>
-            <h2 class="text-sm font-medium text-muted-foreground">Cena</h2>
-            <p class="mt-1 text-lg">{{ number_format((float) $product->price, 2, ',', ' ') }} €</p>
+            <h2 class="text-sm font-medium text-muted-foreground">Daudzums</h2>
+            <p class="mt-1 text-lg">{{ $product->quantity }}</p>
+        </div>
+        <div>
+            <h2 class="text-sm font-medium text-muted-foreground">Statuss</h2>
+            <p class="mt-1">{{ $product->status }}</p>
+        </div>
+        <div>
+            <h2 class="text-sm font-medium text-muted-foreground">Derīguma termiņš</h2>
+            <p class="mt-1">{{ $product->expiration_date?->format('d.m.Y') ?? 'Nav norādīts' }}</p>
         </div>
         @if ($product->description)
             <div>

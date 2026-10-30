@@ -59,8 +59,10 @@ class ProductController extends Controller
     {
         return $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'quantity' => ['required', 'integer', 'min:0', 'max:4294967295'],
             'description' => ['nullable', 'string', 'max:1000'],
-            'price' => ['required', 'numeric', 'decimal:0,2', 'min:0', 'max:99999999.99'],
+            'expiration_date' => ['nullable', 'date'],
+            'status' => ['required', 'string', 'max:255'],
         ]);
     }
 }

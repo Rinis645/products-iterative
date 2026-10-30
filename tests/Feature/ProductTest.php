@@ -10,18 +10,46 @@ class ProductTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_create_and_edit_forms_include_product_attributes(): void
+    {
+        $this->get(route('products.create'))
+            ->assertOk()
+            ->assertSee('name="name"', false)
+            ->assertSee('name="quantity"', false)
+            ->assertSee('name="description"', false)
+            ->assertSee('name="expiration_date"', false)
+            ->assertSee('name="status"', false)
+            ->assertDontSee('name="price"', false);
+
+        $product = Product::create([
+            'name' => 'Kafija',
+            'quantity' => 12,
+            'description' => 'Grauzdēta kafija',
+            'expiration_date' => '2027-01-15',
+            'status' => 'available',
+        ]);
+
+        $this->get(route('products.edit', $product))
+            ->assertOk()
+            ->assertSee('value="2027-01-15"', false);
+    }
+
     public function test_products_index_displays_products(): void
     {
         $product = Product::create([
             'name' => 'Kafija',
+            'quantity' => 12,
             'description' => 'Grauzdēta kafija',
-            'price' => 8.50,
+            'expiration_date' => '2027-01-15',
+            'status' => 'available',
         ]);
 
         $this->get(route('products.index'))
             ->assertOk()
             ->assertSee('Kafija')
-            ->assertSee('8,50 €')
+            ->assertSee('12')
+            ->assertSee('15.01.2027')
+            ->assertSee('available')
             ->assertSee('class="holy-grail"', false)
             ->assertSee('class="holy-grail__main"', false)
             ->assertSee('class="holy-grail__sidebar-nav"', false)
@@ -35,15 +63,20 @@ class ProductTest extends TestCase
 
         $this->get(route('products.show', $product))
             ->assertOk()
-            ->assertSee('Grauzdēta kafija');
+            ->assertSee('Grauzdēta kafija')
+            ->assertSee('12')
+            ->assertSee('available')
+            ->assertSee('15.01.2027');
     }
 
     public function test_product_can_be_created_updated_and_deleted(): void
     {
         $this->post(route('products.store'), [
             'name' => 'Tēja',
+            'quantity' => '25',
             'description' => 'Zaļā tēja',
-            'price' => '4.25',
+            'expiration_date' => '2027-06-30',
+            'status' => 'available',
         ])->assertRedirect();
 
         $product = Product::firstOrFail();
@@ -51,20 +84,26 @@ class ProductTest extends TestCase
         $this->assertDatabaseHas('products', [
             'id' => $product->id,
             'name' => 'Tēja',
-            'price' => '4.25',
+            'quantity' => 25,
+            'expiration_date' => '2027-06-30',
+            'status' => 'available',
         ]);
 
         $this->put(route('products.update', $product), [
             'name' => 'Zaļā tēja',
+            'quantity' => '18',
             'description' => null,
-            'price' => '5.00',
+            'expiration_date' => null,
+            'status' => 'limited',
         ])->assertRedirect(route('products.show', $product));
 
         $this->assertDatabaseHas('products', [
             'id' => $product->id,
             'name' => 'Zaļā tēja',
+            'quantity' => 18,
             'description' => null,
-            'price' => '5.00',
+            'expiration_date' => null,
+            'status' => 'limited',
         ]);
 
         $this->delete(route('products.destroy', $product))
@@ -78,15 +117,18 @@ class ProductTest extends TestCase
         $this->from(route('products.create'))
             ->post(route('products.store'), [
                 'name' => '',
-                'price' => '-1',
+                'quantity' => '-1',
+                'status' => '',
             ])
             ->assertRedirect(route('products.create'))
-            ->assertSessionHasErrors(['name', 'price']);
+            ->assertSessionHasErrors(['name', 'quantity', 'status']);
 
         $this->post(route('products.store'), [
-            'name' => 'Nepareiza cena',
-            'price' => '1.999',
-        ])->assertSessionHasErrors('price');
+            'name' => 'Nepareizs produkts',
+            'quantity' => '1.5',
+            'expiration_date' => 'nepareizs datums',
+            'status' => 'available',
+        ])->assertSessionHasErrors(['quantity', 'expiration_date']);
 
         $this->assertDatabaseCount('products', 0);
     }

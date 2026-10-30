@@ -8,14 +8,16 @@ class Product extends Model
 {
     protected $fillable = [
         'name',
+        'quantity',
         'description',
-        'price',
+        'expiration_date',
+        'status',
     ];
 
     protected function casts(): array
     {
         return [
-            'price' => 'decimal:2',
+            'expiration_date' => 'date:Y-m-d',
         ];
     }
 }

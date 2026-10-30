@@ -17,14 +17,26 @@
     </div>
 
     <div>
+        <label class="mb-2 block text-sm font-medium" for="quantity">Daudzums</label>
+        <input class="w-full rounded-md border bg-background px-3 py-2" id="quantity" name="quantity" type="number" value="{{ old('quantity', $product->quantity ?? 0) }}" min="0" max="4294967295" step="1" required>
+        @error('quantity') <p class="mt-1 text-sm text-destructive">{{ $message }}</p> @enderror
+    </div>
+
+    <div>
         <label class="mb-2 block text-sm font-medium" for="description">Apraksts</label>
         <textarea class="w-full rounded-md border bg-background px-3 py-2" id="description" name="description" rows="4" maxlength="1000">{{ old('description', $product->description ?? '') }}</textarea>
         @error('description') <p class="mt-1 text-sm text-destructive">{{ $message }}</p> @enderror
     </div>
 
     <div>
-        <label class="mb-2 block text-sm font-medium" for="price">Cena (€)</label>
-        <input class="w-full rounded-md border bg-background px-3 py-2" id="price" name="price" type="number" value="{{ old('price', $product->price ?? '') }}" min="0" max="99999999.99" step="0.01" required>
-        @error('price') <p class="mt-1 text-sm text-destructive">{{ $message }}</p> @enderror
+        <label class="mb-2 block text-sm font-medium" for="expiration_date">Derīguma termiņš</label>
+        <input class="w-full rounded-md border bg-background px-3 py-2" id="expiration_date" name="expiration_date" type="date" value="{{ old('expiration_date', isset($product) ? $product->expiration_date?->format('Y-m-d') : '') }}">
+        @error('expiration_date') <p class="mt-1 text-sm text-destructive">{{ $message }}</p> @enderror
+    </div>
+
+    <div>
+        <label class="mb-2 block text-sm font-medium" for="status">Statuss</label>
+        <input class="w-full rounded-md border bg-background px-3 py-2" id="status" name="status" type="text" value="{{ old('status', $product->status ?? 'active') }}" maxlength="255" required>
+        @error('status') <p class="mt-1 text-sm text-destructive">{{ $message }}</p> @enderror
     </div>
 </div>
