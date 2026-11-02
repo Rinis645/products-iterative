@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Tag;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,7 +33,26 @@ class ProductController extends Controller
 
     public function show(Product $product): View
     {
+        $product->load('tags');
+
         return view('products.show', compact('product'));
+    }
+
+    public function storeTag(Request $request, Product $product): RedirectResponse
+    {
+        $request->merge([
+            'name' => trim((string) $request->input('name')),
+        ]);
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:50'],
+        ]);
+
+        $tag = Tag::query()->firstOrCreate(['name' => $data['name']]);
+        $product->tags()->syncWithoutDetaching([$tag->id]);
+
+        return redirect()->route('products.show', $product)
+            ->with('success', 'Birka veiksmīgi pievienota produktam.');
     }
 
     public function adjustQuantity(Request $request, Product $product): JsonResponse|RedirectResponse

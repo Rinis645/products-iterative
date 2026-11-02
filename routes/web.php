@@ -8,6 +8,9 @@ Route::inertia('/', 'welcome')->name('home');
 Route::post('products/{product}/quantity', [ProductController::class, 'adjustQuantity'])
     ->name('products.adjust-quantity');
 
+Route::post('products/{product}/tags', [ProductController::class, 'storeTag'])
+    ->name('products.tags.store');
+
 Route::resource('products', ProductController::class);
 
 Route::middleware(['auth', 'verified'])->group(function () {

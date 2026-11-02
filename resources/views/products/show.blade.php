@@ -35,5 +35,27 @@
                 <p class="mt-1 whitespace-pre-line">{{ $product->description }}</p>
             </div>
         @endif
+        <div>
+            <h2 class="text-sm font-medium text-muted-foreground">Birkas</h2>
+            @if ($product->tags->isNotEmpty())
+                <ul class="mt-2 flex flex-wrap gap-2" aria-label="Produkta birkas">
+                    @foreach ($product->tags as $tag)
+                        <li class="rounded-full border px-3 py-1 text-sm">{{ $tag->name }}</li>
+                    @endforeach
+                </ul>
+            @else
+                <p class="mt-1 text-sm">Produktam vēl nav birku.</p>
+            @endif
+
+            <form class="mt-4 flex flex-wrap items-end gap-3" method="POST" action="{{ route('products.tags.store', $product) }}">
+                @csrf
+                <div>
+                    <label class="mb-2 block text-sm font-medium" for="tag-name">Pievienot birku</label>
+                    <input class="w-64 rounded-md border bg-background px-3 py-2" id="tag-name" name="name" type="text" value="{{ old('name') }}" maxlength="50" required>
+                </div>
+                <button class="rounded-md border px-4 py-2 text-sm font-medium" type="submit">Pievienot</button>
+            </form>
+            @error('name') <p class="mt-1 text-sm text-destructive">{{ $message }}</p> @enderror
+        </div>
     </div>
 </x-layout>

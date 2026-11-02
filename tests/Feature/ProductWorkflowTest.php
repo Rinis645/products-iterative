@@ -112,4 +112,69 @@ class ProductWorkflowTest extends TestCase
             'quantity' => 11,
         ]);
     }
+
+    public function test_tags_can_be_added_to_a_product_and_shared_with_other_products(): void
+    {
+        $firstProduct = Product::factory()->create();
+        $secondProduct = Product::factory()->create();
+
+        $this->get(route('products.show', $firstProduct))
+            ->assertOk()
+            ->assertSee('Pievienot birku')
+            ->assertSee('Produktam vēl nav birku.');
+
+        $this->post(route('products.tags.store', $firstProduct), [
+            'name' => 'Pārtika',
+        ])->assertRedirect(route('products.show', $firstProduct))
+            ->assertSessionHas('success', 'Birka veiksmīgi pievienota produktam.');
+
+        $this->post(route('products.tags.store', $firstProduct), [
+            'name' => 'Atlaide',
+        ])->assertRedirect(route('products.show', $firstProduct));
+
+        $this->post(route('products.tags.store', $secondProduct), [
+            'name' => 'Pārtika',
+        ])->assertRedirect(route('products.show', $secondProduct));
+
+        $this->post(route('products.tags.store', $firstProduct), [
+            'name' => 'Pārtika',
+        ])->assertRedirect(route('products.show', $firstProduct));
+
+        $this->assertDatabaseCount('tags', 2);
+        $this->assertDatabaseCount('product_tag', 3);
+        $this->assertSame(
+            ['Atlaide', 'Pārtika'],
+            $firstProduct->fresh()->tags()->orderBy('name')->pluck('name')->all(),
+        );
+        $this->assertSame(
+            ['Pārtika'],
+            $secondProduct->fresh()->tags()->pluck('name')->all(),
+        );
+
+        $this->get(route('products.show', $firstProduct))
+            ->assertOk()
+            ->assertSee('Atlaide')
+            ->assertSee('Pārtika');
+
+        $this->get(route('products.show', $secondProduct))
+            ->assertOk()
+            ->assertSee('Pārtika');
+    }
+
+    public function test_tag_name_is_required_and_limited_to_fifty_characters(): void
+    {
+        $product = Product::factory()->create();
+
+        $this->from(route('products.show', $product))
+            ->post(route('products.tags.store', $product), ['name' => '   '])
+            ->assertRedirect(route('products.show', $product))
+            ->assertSessionHasErrors('name');
+
+        $this->from(route('products.show', $product))
+            ->post(route('products.tags.store', $product), ['name' => str_repeat('a', 51)])
+            ->assertRedirect(route('products.show', $product))
+            ->assertSessionHasErrors('name');
+
+        $this->assertDatabaseCount('tags', 0);
+    }
 }
