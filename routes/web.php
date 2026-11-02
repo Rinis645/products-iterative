@@ -8,8 +8,11 @@ Route::inertia('/', 'welcome')->name('home');
 Route::post('products/{product}/quantity', [ProductController::class, 'adjustQuantity'])
     ->name('products.adjust-quantity');
 
-Route::post('products/{product}/tags', [ProductController::class, 'storeTag'])
-    ->name('products.tags.store');
+Route::get('tags/search', [ProductController::class, 'searchTags'])
+    ->name('tags.search');
+
+Route::put('products/{product}/tags', [ProductController::class, 'updateTags'])
+    ->name('products.tags.update');
 
 Route::resource('products', ProductController::class);
 

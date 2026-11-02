@@ -35,24 +35,63 @@ class ProductController extends Controller
     {
         $product->load('tags');
 
-        return view('products.show', compact('product'));
+        $selectedTagIds = old('tag_ids', $product->tags->modelKeys());
+        $selectedTags = is_array($selectedTagIds)
+            ? Tag::query()->whereKey($selectedTagIds)->orderBy('name')->get()
+            : $product->tags;
+        $pendingTagNames = old('new_tags', []);
+        $pendingTagNames = is_array($pendingTagNames)
+            ? array_values(array_filter($pendingTagNames, static fn (mixed $name): bool => is_string($name) && trim($name) !== ''))
+            : [];
+
+        return view('products.show', compact('product', 'selectedTags', 'pendingTagNames'));
     }
 
-    public function storeTag(Request $request, Product $product): RedirectResponse
+    public function searchTags(Request $request): JsonResponse
     {
-        $request->merge([
-            'name' => trim((string) $request->input('name')),
+        $data = $request->validate([
+            'q' => ['required', 'string', 'min:1', 'max:50'],
         ]);
+
+        $tags = Tag::query()
+            ->where('name', 'like', '%'.addcslashes($data['q'], '%_\\').'%')
+            ->orderBy('name')
+            ->limit(10)
+            ->get(['id', 'name']);
+
+        return response()->json($tags);
+    }
+
+    public function updateTags(Request $request, Product $product): RedirectResponse
+    {
+        $newTags = $request->input('new_tags');
+
+        if (is_array($newTags)) {
+            $request->merge([
+                'new_tags' => array_map(
+                    static fn (mixed $tag): mixed => is_string($tag) ? trim($tag) : $tag,
+                    $newTags,
+                ),
+            ]);
+        }
 
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:50'],
+            'tag_ids' => ['nullable', 'array'],
+            'tag_ids.*' => ['required', 'integer', 'distinct', 'exists:tags,id'],
+            'new_tags' => ['nullable', 'array'],
+            'new_tags.*' => ['required', 'string', 'max:50', 'distinct'],
         ]);
 
-        $tag = Tag::query()->firstOrCreate(['name' => $data['name']]);
-        $product->tags()->syncWithoutDetaching([$tag->id]);
+        $tagIds = $data['tag_ids'] ?? [];
+
+        foreach ($data['new_tags'] ?? [] as $name) {
+            $tagIds[] = Tag::query()->firstOrCreate(['name' => $name])->id;
+        }
+
+        $product->tags()->sync($tagIds);
 
         return redirect()->route('products.show', $product)
-            ->with('success', 'Birka veiksmīgi pievienota produktam.');
+            ->with('success', 'Produkta birkas veiksmīgi atjauninātas.');
     }
 
     public function adjustQuantity(Request $request, Product $product): JsonResponse|RedirectResponse

@@ -37,25 +37,33 @@
         @endif
         <div>
             <h2 class="text-sm font-medium text-muted-foreground">Birkas</h2>
-            @if ($product->tags->isNotEmpty())
-                <ul class="mt-2 flex flex-wrap gap-2" aria-label="Produkta birkas">
-                    @foreach ($product->tags as $tag)
-                        <li class="rounded-full border px-3 py-1 text-sm">{{ $tag->name }}</li>
+            <form class="mt-4 space-y-4" method="POST" action="{{ route('products.tags.update', $product) }}" data-tag-form>
+                @csrf
+                @method('PUT')
+                <ul class="flex flex-wrap gap-2" aria-label="Produkta birkas" data-selected-tags>
+                    @foreach ($selectedTags as $tag)
+                        <li class="flex items-center gap-2 rounded-full border px-3 py-1 text-sm" data-tag-item data-tag-id="{{ $tag->id }}" data-tag-name="{{ $tag->name }}">
+                            <span>{{ $tag->name }}</span>
+                            <input type="hidden" name="tag_ids[]" value="{{ $tag->id }}">
+                            <button class="font-semibold" type="button" aria-label="Dzēst birku {{ $tag->name }}" data-remove-tag>×</button>
+                        </li>
+                    @endforeach
+                    @foreach ($pendingTagNames as $tagName)
+                        <li class="flex items-center gap-2 rounded-full border px-3 py-1 text-sm" data-tag-item data-tag-name="{{ $tagName }}">
+                            <span>{{ $tagName }}</span>
+                            <input type="hidden" name="new_tags[]" value="{{ $tagName }}">
+                            <button class="font-semibold" type="button" aria-label="Dzēst birku {{ $tagName }}" data-remove-tag>×</button>
+                        </li>
                     @endforeach
                 </ul>
-            @else
-                <p class="mt-1 text-sm">Produktam vēl nav birku.</p>
-            @endif
-
-            <form class="mt-4 flex flex-wrap items-end gap-3" method="POST" action="{{ route('products.tags.store', $product) }}">
-                @csrf
                 <div>
-                    <label class="mb-2 block text-sm font-medium" for="tag-name">Pievienot birku</label>
-                    <input class="w-64 rounded-md border bg-background px-3 py-2" id="tag-name" name="name" type="text" value="{{ old('name') }}" maxlength="50" required>
+                    <label class="mb-2 block text-sm font-medium" for="tag-search">Pievienot birku</label>
+                    <input class="w-64 rounded-md border bg-background px-3 py-2" id="tag-search" type="text" autocomplete="off" maxlength="50" aria-autocomplete="list" aria-controls="tag-suggestions" aria-expanded="false" data-tag-input data-search-url="{{ route('tags.search') }}">
+                    <div class="mt-1 hidden max-h-48 w-64 overflow-auto rounded-md border bg-background" id="tag-suggestions" role="listbox" data-tag-suggestions></div>
+                    <p class="mt-1 text-sm text-muted-foreground" aria-live="polite" data-tag-message></p>
                 </div>
-                <button class="rounded-md border px-4 py-2 text-sm font-medium" type="submit">Pievienot</button>
+                <button class="rounded-md border px-4 py-2 text-sm font-medium" type="submit">Update</button>
             </form>
-            @error('name') <p class="mt-1 text-sm text-destructive">{{ $message }}</p> @enderror
         </div>
     </div>
 </x-layout>

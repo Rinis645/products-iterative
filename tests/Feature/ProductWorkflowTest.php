@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Product;
+use App\Models\Tag;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -117,28 +118,29 @@ class ProductWorkflowTest extends TestCase
     {
         $firstProduct = Product::factory()->create();
         $secondProduct = Product::factory()->create();
+        $existingTag = Tag::query()->create(['name' => 'Pārtika']);
 
         $this->get(route('products.show', $firstProduct))
             ->assertOk()
             ->assertSee('Pievienot birku')
-            ->assertSee('Produktam vēl nav birku.');
+            ->assertSee('Update')
+            ->assertSee('data-tag-form', false);
 
-        $this->post(route('products.tags.store', $firstProduct), [
-            'name' => 'Pārtika',
+        $this->get(route('tags.search', ['q' => 'rtik']))
+            ->assertOk()
+            ->assertJson([
+                ['id' => $existingTag->id, 'name' => 'Pārtika'],
+            ]);
+
+        $this->put(route('products.tags.update', $firstProduct), [
+            'tag_ids' => [$existingTag->id],
+            'new_tags' => ['Atlaide'],
         ])->assertRedirect(route('products.show', $firstProduct))
-            ->assertSessionHas('success', 'Birka veiksmīgi pievienota produktam.');
+            ->assertSessionHas('success', 'Produkta birkas veiksmīgi atjauninātas.');
 
-        $this->post(route('products.tags.store', $firstProduct), [
-            'name' => 'Atlaide',
-        ])->assertRedirect(route('products.show', $firstProduct));
-
-        $this->post(route('products.tags.store', $secondProduct), [
-            'name' => 'Pārtika',
+        $this->put(route('products.tags.update', $secondProduct), [
+            'tag_ids' => [$existingTag->id],
         ])->assertRedirect(route('products.show', $secondProduct));
-
-        $this->post(route('products.tags.store', $firstProduct), [
-            'name' => 'Pārtika',
-        ])->assertRedirect(route('products.show', $firstProduct));
 
         $this->assertDatabaseCount('tags', 2);
         $this->assertDatabaseCount('product_tag', 3);
@@ -154,26 +156,52 @@ class ProductWorkflowTest extends TestCase
         $this->get(route('products.show', $firstProduct))
             ->assertOk()
             ->assertSee('Atlaide')
-            ->assertSee('Pārtika');
+            ->assertSee('Pārtika')
+            ->assertSee('data-remove-tag', false);
 
         $this->get(route('products.show', $secondProduct))
             ->assertOk()
             ->assertSee('Pārtika');
+
+        $discountTag = Tag::query()->where('name', 'Atlaide')->firstOrFail();
+
+        $this->put(route('products.tags.update', $firstProduct), [
+            'tag_ids' => [$discountTag->id],
+        ])->assertRedirect(route('products.show', $firstProduct));
+
+        $this->assertSame(
+            ['Atlaide'],
+            $firstProduct->fresh()->tags()->pluck('name')->all(),
+        );
+        $this->assertSame(
+            ['Pārtika'],
+            $secondProduct->fresh()->tags()->pluck('name')->all(),
+        );
     }
 
-    public function test_tag_name_is_required_and_limited_to_fifty_characters(): void
+    public function test_tag_update_rejects_invalid_existing_tags_and_new_names(): void
     {
         $product = Product::factory()->create();
 
         $this->from(route('products.show', $product))
-            ->post(route('products.tags.store', $product), ['name' => '   '])
+            ->put(route('products.tags.update', $product), ['new_tags' => ['   ']])
             ->assertRedirect(route('products.show', $product))
-            ->assertSessionHasErrors('name');
+            ->assertSessionHasErrors('new_tags.0');
 
         $this->from(route('products.show', $product))
-            ->post(route('products.tags.store', $product), ['name' => str_repeat('a', 51)])
+            ->put(route('products.tags.update', $product), ['new_tags' => [str_repeat('a', 51)]])
             ->assertRedirect(route('products.show', $product))
-            ->assertSessionHasErrors('name');
+            ->assertSessionHasErrors('new_tags.0');
+
+        $this->from(route('products.show', $product))
+            ->put(route('products.tags.update', $product), ['tag_ids' => [999]])
+            ->assertRedirect(route('products.show', $product))
+            ->assertSessionHasErrors('tag_ids.0');
+
+        $this->from(route('products.show', $product))
+            ->put(route('products.tags.update', $product), ['new_tags' => 'not-an-array'])
+            ->assertRedirect(route('products.show', $product))
+            ->assertSessionHasErrors('new_tags');
 
         $this->assertDatabaseCount('tags', 0);
     }
