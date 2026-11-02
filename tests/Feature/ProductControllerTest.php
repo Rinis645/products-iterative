@@ -100,6 +100,33 @@ class ProductControllerTest extends TestCase
         ]);
     }
 
+    public function test_quantity_adjustment_returns_json_for_fetch_requests(): void
+    {
+        $product = Product::factory()->create(['quantity' => 10]);
+
+        $this->postJson(route('products.adjust-quantity', $product), [
+            'direction' => 'increase',
+            'amount' => 5,
+        ])->assertOk()
+            ->assertJson([
+                'quantity' => 15,
+                'message' => 'Produkta daudzums veiksmīgi palielināts.',
+            ]);
+
+        $this->postJson(route('products.adjust-quantity', $product), [
+            'direction' => 'decrease',
+            'amount' => 20,
+        ])->assertUnprocessable()
+            ->assertJson([
+                'message' => 'Daudzumu nevar mainīt izvēlētajā virzienā.',
+            ]);
+
+        $this->assertDatabaseHas('products', [
+            'id' => $product->id,
+            'quantity' => 15,
+        ]);
+    }
+
     public function test_guest_can_store_update_and_delete_a_product(): void
     {
         $this->post(route('products.store'), [

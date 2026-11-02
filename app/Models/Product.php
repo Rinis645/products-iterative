@@ -26,21 +26,31 @@ class Product extends Model
         ];
     }
 
-    public function adjustQuantity(int $adjustment): bool
+    public function increaseQuantity(int $amount): bool
     {
-        if ($adjustment === 0 || $adjustment > self::MAX_QUANTITY || $adjustment < -self::MAX_QUANTITY) {
+        return $this->changeQuantity($amount, true);
+    }
+
+    public function decreaseQuantity(int $amount): bool
+    {
+        return $this->changeQuantity($amount, false);
+    }
+
+    private function changeQuantity(int $amount, bool $increase): bool
+    {
+        if ($amount <= 0 || $amount > self::MAX_QUANTITY) {
             return false;
         }
 
         $query = $this->newQuery()->whereKey($this->getKey());
 
-        if ($adjustment > 0) {
-            $query->where('quantity', '<=', self::MAX_QUANTITY - $adjustment);
+        if ($increase) {
+            $query->where('quantity', '<=', self::MAX_QUANTITY - $amount);
         } else {
-            $query->where('quantity', '>=', -$adjustment);
+            $query->where('quantity', '>=', $amount);
         }
 
-        if ($query->increment('quantity', $adjustment) !== 1) {
+        if ($query->increment('quantity', $increase ? $amount : -$amount) !== 1) {
             return false;
         }
 

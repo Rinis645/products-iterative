@@ -9,8 +9,9 @@
     <div class="max-w-2xl space-y-5 rounded-lg border bg-card p-6">
         <div>
             <h2 class="text-sm font-medium text-muted-foreground">Daudzums</h2>
-            <p class="mt-1 text-lg">{{ $product->quantity }}</p>
-            <form class="mt-4 flex flex-wrap items-end gap-3" method="POST" action="{{ route('products.adjust-quantity', $product) }}">
+            <p class="mt-1 text-lg" id="product-quantity">{{ $product->quantity }}</p>
+            <p class="mt-2 text-sm" id="quantity-update-message" aria-live="polite"></p>
+            <form class="mt-4 flex flex-wrap items-end gap-3" method="POST" action="{{ route('products.adjust-quantity', $product) }}" data-quantity-form data-max-quantity="{{ \App\Models\Product::MAX_QUANTITY }}">
                 @csrf
                 <div>
                     <label class="mb-2 block text-sm font-medium" for="quantity-amount">Maināmais daudzums</label>

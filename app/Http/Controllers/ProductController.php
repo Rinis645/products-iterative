@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -34,16 +35,24 @@ class ProductController extends Controller
         return view('products.show', compact('product'));
     }
 
-    public function adjustQuantity(Request $request, Product $product): RedirectResponse
+    public function adjustQuantity(Request $request, Product $product): JsonResponse|RedirectResponse
     {
         $data = $request->validate([
             'direction' => ['required', 'in:increase,decrease'],
             'amount' => ['required', 'integer', 'min:1', 'max:'.Product::MAX_QUANTITY],
         ]);
 
-        $adjustment = (int) $data['amount'] * ($data['direction'] === 'increase' ? 1 : -1);
+        $changed = $data['direction'] === 'increase'
+            ? $product->increaseQuantity((int) $data['amount'])
+            : $product->decreaseQuantity((int) $data['amount']);
 
-        if (! $product->adjustQuantity($adjustment)) {
+        if (! $changed) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Daudzumu nevar mainīt izvēlētajā virzienā.',
+                ], 422);
+            }
+
             return redirect()->route('products.show', $product)
                 ->withErrors(['quantity' => 'Daudzumu nevar mainīt izvēlētajā virzienā.'])
                 ->withInput();
@@ -52,6 +61,13 @@ class ProductController extends Controller
         $message = $data['direction'] === 'increase'
             ? 'Produkta daudzums veiksmīgi palielināts.'
             : 'Produkta daudzums veiksmīgi samazināts.';
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'quantity' => $product->quantity,
+                'message' => $message,
+            ]);
+        }
 
         return redirect()->route('products.show', $product)->with('success', $message);
     }
