@@ -104,6 +104,45 @@ class ProductTest extends TestCase
             ->assertSee('15.01.2027');
     }
 
+    public function test_product_can_adjust_quantity_and_refreshes_its_quantity(): void
+    {
+        $product = Product::factory()->create(['quantity' => 10]);
+
+        $this->assertTrue($product->adjustQuantity(5));
+        $this->assertSame(15, $product->quantity);
+        $this->assertDatabaseHas('products', [
+            'id' => $product->id,
+            'quantity' => 15,
+        ]);
+
+        $this->assertTrue($product->adjustQuantity(-15));
+        $this->assertSame(0, $product->quantity);
+        $this->assertDatabaseHas('products', [
+            'id' => $product->id,
+            'quantity' => 0,
+        ]);
+    }
+
+    public function test_product_quantity_adjustment_rejects_zero_and_out_of_bounds_adjustments(): void
+    {
+        $product = Product::factory()->create(['quantity' => 0]);
+
+        $this->assertFalse($product->adjustQuantity(0));
+        $this->assertFalse($product->adjustQuantity(-1));
+        $this->assertFalse($product->adjustQuantity(-Product::MAX_QUANTITY - 1));
+        $this->assertSame(0, $product->quantity);
+
+        $product->update(['quantity' => Product::MAX_QUANTITY]);
+        $this->assertFalse($product->adjustQuantity(1));
+        $this->assertFalse($product->adjustQuantity(Product::MAX_QUANTITY + 1));
+        $this->assertSame(Product::MAX_QUANTITY, $product->quantity);
+
+        $this->assertDatabaseHas('products', [
+            'id' => $product->id,
+            'quantity' => Product::MAX_QUANTITY,
+        ]);
+    }
+
     public function test_product_can_be_created_updated_and_deleted(): void
     {
         $this->post(route('products.store'), [
