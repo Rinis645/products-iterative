@@ -31,6 +31,75 @@ class ProductControllerTest extends TestCase
             ->assertSee('Kontroliera testa produkts');
     }
 
+    public function test_guest_can_increase_and_decrease_product_quantity_from_show_page(): void
+    {
+        $product = Product::factory()->create(['quantity' => 10]);
+
+        $this->get(route('products.show', $product))
+            ->assertOk()
+            ->assertSee('Maināmais daudzums')
+            ->assertSee('Palielināt')
+            ->assertSee('Samazināt');
+
+        $this->post(route('products.adjust-quantity', $product), [
+            'direction' => 'increase',
+            'amount' => 5,
+        ])->assertRedirect(route('products.show', $product))
+            ->assertSessionHas('success', 'Produkta daudzums veiksmīgi palielināts.');
+
+        $this->assertDatabaseHas('products', [
+            'id' => $product->id,
+            'quantity' => 15,
+        ]);
+
+        $this->post(route('products.adjust-quantity', $product), [
+            'direction' => 'decrease',
+            'amount' => 4,
+        ])->assertRedirect(route('products.show', $product))
+            ->assertSessionHas('success', 'Produkta daudzums veiksmīgi samazināts.');
+
+        $this->assertDatabaseHas('products', [
+            'id' => $product->id,
+            'quantity' => 11,
+        ]);
+    }
+
+    public function test_quantity_adjustment_rejects_invalid_values_and_stock_boundaries(): void
+    {
+        $product = Product::factory()->create(['quantity' => 0]);
+
+        $this->from(route('products.show', $product))
+            ->post(route('products.adjust-quantity', $product), [
+                'direction' => 'decrease',
+                'amount' => 1,
+            ])
+            ->assertRedirect(route('products.show', $product))
+            ->assertSessionHasErrors(['quantity']);
+
+        $product->update(['quantity' => Product::MAX_QUANTITY]);
+
+        $this->from(route('products.show', $product))
+            ->post(route('products.adjust-quantity', $product), [
+                'direction' => 'increase',
+                'amount' => 1,
+            ])
+            ->assertRedirect(route('products.show', $product))
+            ->assertSessionHasErrors(['quantity']);
+
+        $this->from(route('products.show', $product))
+            ->post(route('products.adjust-quantity', $product), [
+                'direction' => 'increase',
+                'amount' => 0,
+            ])
+            ->assertRedirect(route('products.show', $product))
+            ->assertSessionHasErrors(['amount']);
+
+        $this->assertDatabaseHas('products', [
+            'id' => $product->id,
+            'quantity' => Product::MAX_QUANTITY,
+        ]);
+    }
+
     public function test_guest_can_store_update_and_delete_a_product(): void
     {
         $this->post(route('products.store'), [

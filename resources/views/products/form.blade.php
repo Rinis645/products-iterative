@@ -7,7 +7,7 @@
 
     <div>
         <label class="mb-2 block text-sm font-medium" for="quantity">Daudzums</label>
-        <input class="w-full rounded-md border bg-background px-3 py-2" id="quantity" name="quantity" type="number" value="{{ old('quantity', $product->quantity ?? 0) }}" min="0" max="4294967295" step="1" required>
+        <input class="w-full rounded-md border bg-background px-3 py-2" id="quantity" name="quantity" type="number" value="{{ old('quantity', $product->quantity ?? 0) }}" min="0" max="{{ \App\Models\Product::MAX_QUANTITY }}" step="1" required>
         @error('quantity') <p class="mt-1 text-sm text-destructive">{{ $message }}</p> @enderror
     </div>
 
